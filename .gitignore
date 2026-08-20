@@ -12,3 +12,6 @@ results/**/*.npz
 results/**/*.png
 !results/**/metrics.json
 !results/.gitkeep
+
+# transient commit-message scratch file
+.commitmsg

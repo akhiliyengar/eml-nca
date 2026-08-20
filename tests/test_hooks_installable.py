@@ -55,6 +55,32 @@ def test_hook_is_executable_in_git_index(hook):
     )
 
 
+def test_every_shebanged_file_is_executable():
+    """Generalisation of the hook bug to the whole repository.
+
+    A shebang is a promise that the file can be run directly. If the exec bit
+    is missing that promise silently fails on Linux/macOS, exactly as it did
+    for the hooks. ruff encodes the same invariant as EXE001; this test states
+    it independently so it holds even if the lint config changes.
+    """
+    offenders = []
+    for rel in git("ls-files").splitlines():
+        rel = rel.strip()
+        if not rel:
+            continue
+        blob = git("show", f":{rel}")
+        if not blob.startswith("#!"):
+            continue
+        entry = git("ls-files", "-s", rel).strip()
+        if entry and entry.split()[0] != "100755":
+            offenders.append(f"{rel} (mode {entry.split()[0]})")
+    assert not offenders, (
+        "files carry a shebang but are not executable in the git index:\n  "
+        + "\n  ".join(offenders)
+        + "\nFix: git update-index --chmod=+x <path>"
+    )
+
+
 @pytest.mark.parametrize("hook", HOOKS)
 def test_hook_has_lf_endings_in_git_index(hook):
     r"""No CRLF, or the shebang becomes '#!/bin/sh\r' and Linux cannot exec it."""
@@ -113,13 +139,31 @@ def test_ruff_is_pinned_exactly():
     )
 
 
-def test_setup_script_runs_clean():
-    """scripts/setup_hooks.py is the documented first step after cloning; if it
-    exits non-zero the onboarding instructions are wrong."""
+def test_setup_script_reports_correctly():
+    """scripts/setup_hooks.py is the documented first step after cloning.
+
+    Deliberately asserts on the branch that matches the ambient environment
+    rather than requiring one. A fresh CI checkout has no git identity, and a
+    test that silently depends on the developer's local config is a test that
+    passes on one machine and fails on another for reasons unrelated to the
+    change under review.
+    """
+    email = git("config", "user.email").strip()
     r = subprocess.run(
         [sys.executable, str(REPO / "scripts" / "setup_hooks.py")],
         capture_output=True, encoding="utf-8", errors="replace",
         cwd=REPO, check=False,
     )
-    assert r.returncode == 0, f"setup_hooks.py failed:\n{r.stdout}\n{r.stderr}"
-    assert "hooksPath" in r.stdout
+    assert "hooksPath" in r.stdout, "setup script must report the hooks path"
+
+    if not email:
+        # No identity configured: the script MUST refuse rather than let a
+        # default (often user@hostname, or a corporate address) slip through.
+        assert r.returncode == 1
+        assert "ACTION REQUIRED" in r.stdout
+        assert "user.email is unset" in r.stdout
+    elif "microsoft.com" in email.lower():
+        assert r.returncode == 1
+        assert "corporate address" in r.stdout
+    else:
+        assert r.returncode == 0, f"setup failed:\n{r.stdout}\n{r.stderr}"
