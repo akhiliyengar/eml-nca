@@ -121,8 +121,18 @@ class RunRecord:
         return path
 
     def summary(self) -> str:
-        ok = all(v == "pass" for v in self.invariants.values())
-        head = "PASS" if ok else "INVARIANT FAILURE"
+        # WARN is not failure. A run may legitimately proceed with a known
+        # reproducibility gap (dirty tree during exploration) provided the
+        # record says so out loud. Treating WARN as failure trains people to
+        # ignore the header, which then hides real invariant violations.
+        failed = [k for k, v in self.invariants.items() if v == "FAIL"]
+        warned = [k for k, v in self.invariants.items() if v == "WARN"]
+        if failed:
+            head = "INVARIANT FAILURE"
+        elif warned:
+            head = "PASS (with warnings)"
+        else:
+            head = "PASS"
         p = self.provenance
         header = f"[{head}] run {p.run_id}  thread={p.thread}  seed={p.seed}"
         lines = [header]

@@ -134,7 +134,7 @@ silently implying rigour.
 | id | status | hypothesis | parent | verdict |
 |---|---|---|---|---|
 | `t0-foundation` | ● active | EML primitives can be implemented safely enough to iterate thousands of times | - | supported: eml_stable survives 5k steps x 256 starts |
-| `t1-grayscott` | ○ proposed | An EML/SOL forest can recover the uv^2 cross term of Gray-Scott | t0-foundation | _open_ |
+| `t1-grayscott` | ✗ abandoned | An EML/SOL forest can recover the uv^2 cross term of Gray-Scott | t0-foundation | FALSIFIED 2026-08-20: EML/SOL approximates (relMSE 1.1e-2) but does not recover; 2.27e29x worse than exact basis. Given a mixed basis the search selects the polynomial u*v^2. Confirms Asanuma on cross-variable interaction. |
 | `t2-lenia-gate` | ○ proposed | Erez's 3-param gate can replace Lenia's Gaussian growth function and sustain Orbium | t0-foundation | _open_ |
 | `t3-nca-forest` | ○ proposed | An EML forest with a linear perception projection matches Growing-NCA at <= 300 params vs ~8000 | t2-lenia-gate | _open_ |
 | `t4-spectral` | ○ proposed | rho(J) from the analytic Jacobian predicts which NCA patterns persist | t3-nca-forest | _open_ |

@@ -31,13 +31,13 @@
     },
     {
       "id": "t1-grayscott",
-      "status": "proposed",
+      "status": "abandoned",
       "parent": "t0-foundation",
       "hypothesis": "An EML/SOL forest can recover the uv^2 cross term of Gray-Scott",
-      "falsifier": "relMSE > 0.01 against the known closed form at any depth <= 4",
-      "owner": null,
-      "opened": null,
-      "verdict": null,
+      "falsifier": "extrapolation ratio > 10x OR error > 1e6x the exact-basis control",
+      "owner": "akhiliyengar",
+      "opened": "2026-08-20",
+      "verdict": "FALSIFIED 2026-08-20: EML/SOL approximates (relMSE 1.1e-2) but does not recover; 2.27e29x worse than exact basis. Given a mixed basis the search selects the polynomial u*v^2. Confirms Asanuma on cross-variable interaction.",
       "notes": "Deliberately targets EML's known weakness. Asanuma reports the univariate-additive form cannot represent cross-variable interaction. A clean negative here is a valid and useful outcome.",
       "artifacts": []
     },

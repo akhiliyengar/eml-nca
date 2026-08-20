@@ -1,0 +1,55 @@
+{
+  "invariants": {
+    "finite:target": "pass",
+    "reproducible": "WARN"
+  },
+  "metrics": {
+    "eml_only.extrap_ratio": 3.1820507171656263,
+    "eml_only.extrap_rel_mse": 0.03967195110661171,
+    "eml_only.fit_rel_mse": 0.012467416340223837,
+    "eml_only.n_atoms": 61,
+    "eml_sol.extrap_ratio": 4.214688365046047,
+    "eml_sol.extrap_rel_mse": 0.04604853164329025,
+    "eml_sol.fit_rel_mse": 0.010925726330133343,
+    "eml_sol.n_atoms": 120,
+    "eml_sol_poly.extrap_ratio": 0.11063430673787335,
+    "eml_sol_poly.extrap_rel_mse": 6.202751552107376e-07,
+    "eml_sol_poly.fit_rel_mse": 5.606535382197133e-06,
+    "eml_sol_poly.n_atoms": 126,
+    "poly_control.extrap_ratio": 0.2034119634857179,
+    "poly_control.extrap_rel_mse": 2.02504685746617e-31,
+    "poly_control.fit_rel_mse": 9.955397031543595e-31,
+    "poly_control.n_atoms": 10,
+    "sol_only.extrap_ratio": 4.048114454700175,
+    "sol_only.extrap_rel_mse": 0.054137912609019345,
+    "sol_only.fit_rel_mse": 0.01337361213840212,
+    "sol_only.n_atoms": 67,
+    "verdict.control_ratio": 2.2739489446139654e+29,
+    "verdict.recovered": false
+  },
+  "notes": [
+    "working tree was dirty: the exact code is not committed anywhere, so no one else can reproduce this"
+  ],
+  "provenance": {
+    "config_path": "inline",
+    "config_sha256": "3ac7f737d6f59e17b2eae70b1a9047fd0b31db6d2e319ece38aef7e8c79bdc82",
+    "duration_s": null,
+    "env": {
+      "machine": "AMD64",
+      "numpy": "2.4.6",
+      "platform": "Windows-10-10.0.26200-SP0",
+      "python": "3.11.9"
+    },
+    "git": {
+      "branch": "main",
+      "dirty": true,
+      "sha": "cd3ed25be540023b5e5f2cc66f45396ca6c6193c",
+      "short": "cd3ed25be"
+    },
+    "run_id": "29f0ef806f8c",
+    "schema": 1,
+    "seed": 0,
+    "started_utc": "2026-08-20T18:48:41Z",
+    "thread": "t1-grayscott"
+  }
+}
