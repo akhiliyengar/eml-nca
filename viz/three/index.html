@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Lenia — Erez EML gate vs Gaussian growth</title>
+<style>
+  :root {
+    --bg:#0b0e14; --panel:#141922; --line:#242c3a;
+    --fg:#c9d4e5; --dim:#7c8ba1; --accent:#4fd1c5; --warn:#f6ad55; --bad:#fc8181;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg);
+         font:13px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+         display:flex; min-height:100vh; }
+  #stage { flex:1; display:flex; align-items:center; justify-content:center;
+           position:relative; }
+  canvas { image-rendering:pixelated; border:1px solid var(--line); }
+  #panel { width:340px; background:var(--panel); border-left:1px solid var(--line);
+           padding:16px; overflow-y:auto; }
+  h1 { font-size:14px; margin:0 0 2px; letter-spacing:.02em; }
+  .sub { color:var(--dim); font-size:11px; margin-bottom:16px; }
+  fieldset { border:1px solid var(--line); border-radius:4px; margin:0 0 14px;
+             padding:10px 12px 12px; }
+  legend { color:var(--accent); font-size:11px; text-transform:uppercase;
+           letter-spacing:.08em; padding:0 4px; }
+  label { display:block; margin:9px 0 3px; color:var(--dim); font-size:11px; }
+  input[type=range] { width:100%; accent-color:var(--accent); }
+  .val { float:right; color:var(--fg); }
+  button { background:#1e2634; color:var(--fg); border:1px solid var(--line);
+           border-radius:3px; padding:6px 10px; cursor:pointer; font:inherit;
+           font-size:11px; margin:2px 2px 0 0; }
+  button:hover { border-color:var(--accent); }
+  button.on { background:var(--accent); color:#0b0e14; border-color:var(--accent); }
+  table { width:100%; border-collapse:collapse; font-size:11px; }
+  td { padding:2px 0; }
+  td.k { color:var(--dim); }
+  td.v { text-align:right; font-variant-numeric:tabular-nums; }
+  .note { color:var(--dim); font-size:10px; line-height:1.5; margin-top:6px; }
+  .bad { color:var(--bad); } .warn { color:var(--warn); } .ok { color:var(--accent); }
+  a { color:var(--accent); }
+</style>
+</head>
+<body>
+<div id="stage"><canvas id="c" width="256" height="256"></canvas></div>
+
+<div id="panel">
+  <h1>Lenia · growth function comparison</h1>
+  <div class="sub">Erez EML gate vs Gaussian — thread <code>t2-lenia-gate</code></div>
+
+  <fieldset>
+    <legend>growth function</legend>
+    <button id="bGauss" class="on">Gaussian (control)</button>
+    <button id="bErez">Erez EML gate</button>
+    <div class="note" id="gdesc"></div>
+  </fieldset>
+
+  <fieldset id="fsGauss">
+    <legend>Gaussian G(u)</legend>
+    <label>mu <span class="val" id="vmu">0.150</span></label>
+    <input type="range" id="mu" min="0.02" max="0.40" step="0.001" value="0.15">
+    <label>sigma <span class="val" id="vsig">0.017</span></label>
+    <input type="range" id="sig" min="0.001" max="0.08" step="0.001" value="0.017">
+  </fieldset>
+
+  <fieldset id="fsErez" style="display:none">
+    <legend>Erez gate (c+x)^a − b·x − c^a</legend>
+    <label>a — exponent <span class="val" id="va">0.500</span></label>
+    <input type="range" id="a" min="0.05" max="0.95" step="0.01" value="0.5">
+    <label>b — suppression <span class="val" id="vb">0.300</span></label>
+    <input type="range" id="b" min="0.01" max="2.00" step="0.01" value="0.3">
+    <label>c — centering <span class="val" id="vc">0.020</span></label>
+    <input type="range" id="c" min="0.001" max="0.20" step="0.001" value="0.02">
+    <label>scale <span class="val" id="vs">1.00</span></label>
+    <input type="range" id="gscale" min="0.05" max="4.00" step="0.01" value="1.0">
+    <div class="note">
+      Non-monotone in one 3-parameter block. A Gaussian or Hill needs a
+      difference of two opposed blocks for the same shape.
+      Peak at R* = (a/b)^(1/(1−a)) = <span id="peak" class="ok"></span>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>kernel &amp; time</legend>
+    <label>radius <span class="val" id="vR">13</span></label>
+    <input type="range" id="R" min="6" max="24" step="1" value="13">
+    <label>dt <span class="val" id="vdt">0.10</span></label>
+    <input type="range" id="dt" min="0.02" max="0.40" step="0.01" value="0.10">
+  </fieldset>
+
+  <fieldset>
+    <legend>live readout</legend>
+    <table>
+      <tr><td class="k">step</td><td class="v" id="rstep">0</td></tr>
+      <tr><td class="k">mass</td><td class="v" id="rmass">—</td></tr>
+      <tr><td class="k">per-step gain</td><td class="v" id="rgain">—</td></tr>
+      <tr><td class="k">verdict</td><td class="v" id="rverdict">—</td></tr>
+    </table>
+    <div class="note">
+      Gain is mass(t)/mass(t−1), smoothed. NCA and Lenia both apply their rule
+      thousands of times: 1.05^100 ≈ 131×, 0.95^100 ≈ 0.006. There is almost no
+      middle ground, so gain is the number that decides survival.
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>seed pattern</legend>
+    <button id="bOrbium">Orbium</button>
+    <button id="bBlob">blob</button>
+    <button id="bNoise">noise</button>
+    <button id="bPause">pause</button>
+    <div class="note">
+      Orbium is Lenia's canonical glider. Rung 2 asks whether the EML gate can
+      sustain it for 1000 steps.
+    </div>
+  </fieldset>
+
+  <div class="note">
+    <a href="https://github.com/akhiliyengar/eml-nca">akhiliyengar/eml-nca</a> ·
+    Lenia by <a href="https://github.com/Chakazul/Lenia">Bert Chan</a> (MIT) ·
+    gate from <a href="https://arxiv.org/abs/2605.02972">arXiv:2605.02972</a>
+  </div>
+</div>
+
+<script type="module" src="./lenia.js"></script>
+</body>
+</html>

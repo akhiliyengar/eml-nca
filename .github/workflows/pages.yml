@@ -1,0 +1,57 @@
+name: pages
+
+# Publishes the WebGL viewer to GitHub Pages.
+#
+# Deliberately no build step: the viewer is raw WebGL2 with no runtime
+# download and no dependency tree, so "deploy" is "copy the directory". A
+# visualisation behind a toolchain gets looked at once.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "viz/three/**"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  # The viewer reimplements the growth functions in GLSL. If those drift from
+  # the Python used in experiments, the picture stops describing the
+  # measurement -- which is worse than no picture, because it produces
+  # confident wrong intuition. Gate the deploy on the drift tests.
+  verify:
+    name: shader matches python
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: |
+          python -m pip install --quiet --upgrade pip
+          python -m pip install --quiet -e ".[dev]"
+      - run: python -m pytest tests/test_viz_lenia.py -q
+
+  deploy:
+    needs: verify
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: viz/three
+      - id: deployment
+        uses: actions/deploy-pages@v4
