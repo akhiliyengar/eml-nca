@@ -1,0 +1,52 @@
+# Normalise line endings in the repository.
+#
+# This file is load-bearing for the security hooks, not cosmetic.
+#
+# Git hooks are shell scripts. If `.githooks/pre-commit` is checked out with
+# CRLF, the shebang becomes "#!/bin/sh\r" and Linux/macOS report
+# "bad interpreter: no such file or directory". Git then treats the hook as
+# absent and CONTINUES SILENTLY -- the commit succeeds with no scan.
+#
+# That is the worst possible failure for a security control: it does not warn,
+# it just stops protecting. Caught by CI on the first push; pinned here.
+
+# Default: normalise text to LF in the repository, let git decide the checkout.
+* text=auto eol=lf
+
+# Must be LF on disk, on every platform, or they will not execute.
+.githooks/* text eol=lf
+*.sh        text eol=lf
+
+# Source and config: LF everywhere for stable diffs across contributors.
+*.py    text eol=lf
+*.toml  text eol=lf
+*.yml   text eol=lf
+*.yaml  text eol=lf
+*.json  text eol=lf
+*.md    text eol=lf
+*.txt   text eol=lf
+*.js    text eol=lf
+*.ts    text eol=lf
+*.html  text eol=lf
+*.css   text eol=lf
+*.glsl  text eol=lf
+
+# Windows-only scripts genuinely want CRLF.
+*.bat   text eol=crlf
+*.ps1   text eol=crlf
+
+# Never touch binaries.
+*.png   binary
+*.jpg   binary
+*.gif   binary
+*.mp4   binary
+*.webm  binary
+*.pdf   binary
+*.npz   binary
+*.npy   binary
+*.pt    binary
+*.pth   binary
+*.safetensors binary
+*.woff  binary
+*.woff2 binary
+*.ico   binary

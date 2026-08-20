@@ -1,38 +1,30 @@
-Add zero-dependency security scanner, git hooks, CI, and docs
+Fix security hooks failing open on Linux/macOS; pin ruff
 
-Repo is going public and is developed on a corporate machine, so the controls
-target accidental disclosure rather than a targeted attacker.
+CI caught two stacked bugs that made every git hook silently inert on Linux
+and macOS while Windows reported green. Neither emitted a warning.
 
-security/scan.py  stdlib-only scanner: credentials, corporate identifiers,
-                  internal URLs, local-path and tenant leakage. Scans added
-                  lines only; redacts findings before printing, since CI logs
-                  on a public repo are themselves public.
-.githooks/        pre-commit (identity guard + staged scan), commit-msg,
-                  pre-push (pushed range + full-history identity audit).
-                  Version-controlled via core.hooksPath; .git/hooks neither
-                  clones nor gets reviewed.
-.github/workflows CI gates on the scanner, then a 2-OS x 2-python guard
-                  matrix. A dedicated job proves the hooks actually block a
-                  synthetic secret, so the control cannot silently rot.
+  exec bit  hooks were committed 100644. Git refuses to run a non-executable
+            hook and then CONTINUES, so the commit succeeds unscanned.
+  CRLF      hooks were committed with CRLF, so the shebang resolved to
+            '#!/bin/sh\r' -> 'bad interpreter'. Git skips the hook. Silently.
 
-Two encoding bugs found by dogfooding the scanner on its own commit:
+A control that fails OPEN and QUIETLY on the two platforms most likely to run
+CI is worse than no control, because it manufactures false confidence. The CI
+job that commits a synthetic secret is what surfaced this; without it the gap
+would have shipped invisibly.
 
-  read   subprocess(text=True) decodes with the LOCALE codec (cp1252 on
-         Windows). A non-ASCII byte in a diff raised UnicodeDecodeError inside
-         subprocess's reader thread; the exception was swallowed and .stdout
-         returned None. Had it returned an empty string the scanner would have
-         reported CLEAN on content it never read - a silent false negative,
-         the one failure mode that is unrecoverable for this tool.
-  write  same root cause, opposite direction: printing a redacted line with a
-         non-ASCII character killed the run AFTER a finding, losing the report
-         exactly when it mattered.
+.gitattributes  root-cause fix: pins LF for .githooks/*, sources and configs;
+                marks binaries. Whole repo renormalised.
+hook modes      now 100755 in the git index (the filesystem bit does not
+                survive a clone; the index mode is what others receive).
+ruff            pinned ==0.16.3. 'ruff>=0.6' resolved to a newer release in
+                CI than locally and failed on rules that did not exist when
+                the code was written - dependency drift, inside an hour of
+                writing a README section warning about dependency drift.
 
-Both now force UTF-8 and fail loudly rather than silently.
-
-The CI OS matrix is load-bearing: the branch-cut test pins a floating-point
-sign roughly 8 ULPs from flipping, which would silently invert every constant
-derived from ln(-1).
-
-45 new tests. All fixtures synthetic.
+tests/test_hooks_installable.py  10 tests pinning the invariants: index mode,
+                LF endings, valid shebang, .gitattributes coverage, no CRLF in
+                any tracked .py, ruff pinned exactly, setup script exits 0.
+                A correct scanner that never executes is worth nothing.
 
 Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>
