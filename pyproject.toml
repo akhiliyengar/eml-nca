@@ -17,10 +17,12 @@ where = ["src"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["."]
 addopts = "-q --strict-markers"
 markers = ["slow: long-running experiment tests"]
 
 [tool.ruff]
 line-length = 88
 src = ["src", "tests"]
+
 

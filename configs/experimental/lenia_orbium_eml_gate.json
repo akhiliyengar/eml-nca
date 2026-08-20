@@ -1,0 +1,22 @@
+{
+  "$comment": [
+    "EXPERIMENTAL CONFIG - edit freely.",
+    "Assertions against this config are METRICS: they report deltas and never",
+    "block a merge. Movement here is the research, not a regression.",
+    "",
+    "Swaps Lenia's Gaussian growth function for Erez's centered EML gate",
+    "(arXiv:2605.02972 eq. 6): G(x) = (c+x)^a - b*x - c^a, non-monotone in a",
+    "single 3-parameter block where a Hill/Gaussian needs two opposed blocks."
+  ],
+  "name": "lenia_orbium_eml_gate",
+  "frozen": false,
+  "seed": 0,
+  "grid": {"size": 128, "dt": 0.1},
+  "kernel": {"type": "gaussian_ring", "radius": 13, "mu": 0.5, "sigma": 0.15},
+  "growth": {"type": "erez_gate", "a": 0.5, "b": 0.3, "c": 0.02},
+  "steps": 1000,
+  "expect": {
+    "pattern_survives": null,
+    "mass_bounds": null
+  }
+}

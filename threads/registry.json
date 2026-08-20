@@ -1,0 +1,93 @@
+{
+  "$comment": [
+    "Research thread registry.",
+    "",
+    "Borrowed from deepseek-harness's 'everything is a plugin': there is no",
+    "privileged main line of investigation. A thread mounts beside the others,",
+    "runs independently, and unwinds cleanly if abandoned. Threads may fork",
+    "from a parent and may converge back into one.",
+    "",
+    "Git branches carry the CODE. This registry carries the ARGUMENT: what was",
+    "believed, what would falsify it, and what actually happened. Branches get",
+    "deleted; the reasoning must not.",
+    "",
+    "status:  proposed | active | parked | converged | abandoned",
+    "",
+    "An abandoned thread is a RESULT, not a failure, and keeps its verdict.",
+    "Deleting dead threads is how a research log turns into marketing."
+  ],
+  "schema": 1,
+  "threads": [
+    {
+      "id": "t0-foundation",
+      "status": "active",
+      "parent": null,
+      "hypothesis": "EML primitives can be implemented safely enough to iterate thousands of times",
+      "falsifier": "no stabilised variant survives 5k iterations without NaN",
+      "owner": "akhiliyengar",
+      "opened": "2026-08-20",
+      "verdict": "supported: eml_stable survives 5k steps x 256 starts",
+      "artifacts": ["src/emlnca/ops.py", "tests/test_invariants.py"]
+    },
+    {
+      "id": "t1-grayscott",
+      "status": "proposed",
+      "parent": "t0-foundation",
+      "hypothesis": "An EML/SOL forest can recover the uv^2 cross term of Gray-Scott",
+      "falsifier": "relMSE > 0.01 against the known closed form at any depth <= 4",
+      "owner": null,
+      "opened": null,
+      "verdict": null,
+      "notes": "Deliberately targets EML's known weakness. Asanuma reports the univariate-additive form cannot represent cross-variable interaction. A clean negative here is a valid and useful outcome.",
+      "artifacts": []
+    },
+    {
+      "id": "t2-lenia-gate",
+      "status": "proposed",
+      "parent": "t0-foundation",
+      "hypothesis": "Erez's 3-param gate can replace Lenia's Gaussian growth function and sustain Orbium",
+      "falsifier": "Orbium dies before 1000 steps for all (a,b,c) in the swept range",
+      "owner": null,
+      "opened": null,
+      "verdict": null,
+      "notes": "Highest prior probability. Lenia's growth function is univariate and non-monotone, which is exactly the shape Erez's gate produces natively in one block.",
+      "artifacts": []
+    },
+    {
+      "id": "t3-nca-forest",
+      "status": "proposed",
+      "parent": "t2-lenia-gate",
+      "hypothesis": "An EML forest with a linear perception projection matches Growing-NCA at <= 300 params vs ~8000",
+      "falsifier": "no configuration under 300 params reaches comparable morphogenesis",
+      "owner": null,
+      "opened": null,
+      "verdict": null,
+      "notes": "Keep the linear projection: linear algebra mixes 48 dims well, EML does not. Belaiche and Asanuma converged on this fix independently.",
+      "artifacts": []
+    },
+    {
+      "id": "t4-spectral",
+      "status": "proposed",
+      "parent": "t3-nca-forest",
+      "hypothesis": "rho(J) from the analytic Jacobian predicts which NCA patterns persist",
+      "falsifier": "rho(J) shows no correlation with observed pattern survival",
+      "owner": null,
+      "opened": null,
+      "verdict": null,
+      "notes": "The genuinely novel angle. Currently unanswerable analytically for MLP-based NCA because the function is non-identifiable from the weights.",
+      "artifacts": []
+    },
+    {
+      "id": "t5-symbolic-recovery",
+      "status": "proposed",
+      "parent": "t3-nca-forest",
+      "hypothesis": "Trained EML weights snap to exact symbolic values, recovering a readable rule",
+      "falsifier": "fewer than 10% of parameters snap within 30% loss tolerance",
+      "owner": null,
+      "opened": null,
+      "verdict": null,
+      "notes": "PRIOR IS LOW. Germany et al. report 0/42 at depth 3 on simpler targets. Registered anyway because it is EML's headline claim and a negative result here is worth publishing.",
+      "artifacts": []
+    }
+  ]
+}

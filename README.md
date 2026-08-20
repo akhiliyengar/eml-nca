@@ -1,151 +1,198 @@
 # eml-nca
 
-**Can the EML operator family do anything useful for Neural Cellular Automata?**
+**Does the EML operator family do anything useful for Neural Cellular Automata?**
 
-A comparative study. The working hypothesis is deliberately falsifiable, and the
-repository is built so that a negative result is a publishable outcome rather
-than a wasted month.
+A falsification-first study. The working assumption is **no**, except in two
+narrow places the literature actually supports. Negative results are the point,
+not a consolation.
+
+[![ci](https://github.com/akhiliyengar/eml-nca/actions/workflows/ci.yml/badge.svg)](https://github.com/akhiliyengar/eml-nca/actions/workflows/ci.yml)
 
 ---
 
-## Background
+## Why
 
-Odrzywołek ([arXiv:2603.21852](https://arxiv.org/abs/2603.21852)) showed that a
+Odrzywołek ([arXiv:2603.21852](https://arxiv.org/abs/2603.21852)) showed a
 single binary operator
 
 $$\mathrm{eml}(x, y) = e^{x} - \ln(y)$$
 
-together with the constant `1` generates every standard elementary function — a
-continuous analogue of the NAND gate. Seven papers have since cited it.
+with the constant `1` generates every elementary function — a continuous
+analogue of NAND. Seven papers cite it. Reading all seven in full:
 
-Reading all seven in full produced a sceptical summary:
-
-| Claim | Evidence |
+| Claim | Verdict |
 |---|---|
-| EML gives symbolic interpretability | ✗ Germany et al. report **0/42** parameters snapping to symbolic form at depth 3 |
-| EML is uniquely expressive | ✗ Erez shows a Hill grammar **ties** at depth 2 |
-| EML is practical as-is | ✗ every adopter added parameters, gates, clipping, or a second primitive |
-| EML wins as a reusable hardware gate | ✓ Günlü — one analog gate type per tree node |
-| EML wins on depth-1 parsimony | ✓ Erez — 3-parameter non-monotone block, ΔAIC 277–373 |
+| symbolic interpretability | **contradicted** — 0/42 params snap (Germany et al. §3.4) |
+| uniquely expressive | **contradicted** — Hill grammar ties at depth 2 (Erez) |
+| practical unmodified | **contradicted** — every adopter added params, gates or clipping |
+| reusable hardware gate | **supported** — exactly nomographic (Günlü) |
+| depth-1 parsimony | **supported** — 3-param non-monotone block, ΔAIC 277–373 (Erez) |
 
-This repo tests whether the two genuine wins transfer to NCA.
-
-## Hypotheses
-
-**H1 — parameter efficiency.** An EML forest matches Growing-NCA morphogenesis
-with ≤300 parameters versus ~8,000 in the standard MLP update rule.
-
-**H2 — long-horizon stability.** A symbolic rule is more stable over 10,000+
-steps than an MLP, which is known to be fragile beyond its trained step count.
-
-**H3 — analytic stability prediction.** Because an EML tree yields an exact
-closed-form Jacobian, the spectral radius ρ(J) *predicts* which patterns
-persist. This is not available from a ReLU MLP, whose function is
-non-identifiable from its weights.
-
-**H4 — symbolic recovery.** Prior probability low, per the evidence above.
-Reported as a negative result if it fails.
+**Only the last two plausibly transfer to NCA.** This repo tests those.
+Full hypotheses in [SPEC.md](SPEC.md); boundaries in [docs/SCOPE.md](docs/SCOPE.md).
 
 ## The central hazard
 
 NCA applies its update rule thousands of times recursively. EML contains `exp`.
-Günlü's error analysis gives per-node sensitivity `e^b`, compounding along the
-path to the root.
 
-At gain 1.05 over 100 steps: **131×**. At 0.95: **0.006**. There is almost no
-middle ground.
+| per-step gain | after 100 steps |
+|---|---|
+| 1.05 | **131×** |
+| 0.95 | **0.006** |
 
-Every experiment therefore instruments `GainTrace` from the first run, and only
-`eml_stable` (softplus-guarded) is permitted inside an iterated loop.
-
-## Experiment ladder
-
-| Rung | Target | Why | Ground truth |
-|---|---|---|---|
-| 1 | Gray–Scott reaction–diffusion | tests cross-variable interaction `uv²`, EML's known weakness | exact |
-| 2 | **Lenia growth function** | univariate, non-monotone — Erez's gate maps directly onto it | Gaussian baseline |
-| 3 | Full NCA update rule | the real target | none |
-| 4 | Jacobian spectral analysis | H3 | — |
-
-Rung 2 is the highest-probability win.
+Almost no middle ground. So: only `eml_stable` inside a loop, `GainTrace`
+instrumented from run one, and a catastrophe guard at 10⁻³–10³ that is a sanity
+bound — **not** a quality bar. A gain of 1.3 is a *result*.
 
 ## Quick start
 
 ```bash
 git clone https://github.com/akhiliyengar/eml-nca.git
 cd eml-nca
-python -m venv .venv && . .venv/Scripts/activate   # or .venv/bin/activate
+python -m venv .venv && . .venv/Scripts/activate    # or .venv/bin/activate
 pip install -e ".[dev]"
-python scripts/setup_hooks.py      # REQUIRED: activates security hooks
+
+python scripts/setup_hooks.py          # REQUIRED — hooks do not survive clone
+python scripts/fetch_literature.py     # download the 9-source corpus
+python scripts/gen_docs.py             # refresh generated docs
 pytest -q
 ```
 
-## Layout
+Then read [SPEC.md](SPEC.md) → [AGENTS.md](AGENTS.md) → `journal/`.
 
+## Repository map
+
+<!-- BEGIN:REPOMAP -->
 ```
-src/emlnca/       ops (eml / eml_admissible / eml_stable, SOL, Erez gate)
-                  stability (GainTrace, spectral radius, Jacobians)
-                  identities (published claims as executable spec)
-tests/            identities, invariants, security
-security/         zero-dependency secret + identifier scanner
-.githooks/        pre-commit, commit-msg, pre-push
-experiments/      rung1_grayscott, rung2_lenia, rung3_nca
-viz/three/        interactive WebGL viewer
-viz/manim/        concept explainers
-results/          metrics.json per run (artifacts are NOT committed)
+eml-nca/
+  .cursor/                 1 file
+  .githooks/               3 files  pre-commit, commit-msg, pre-push guards
+  .github/                 2 files
+    workflows/               1 file   CI: security gate, guard matrix, hook effectiveness
+  configs/                 2 files
+    experimental/            1 file   working configs -- assertions here are METRICS
+    frozen/                  1 file   reference configs -- assertions here are INVARIANTS
+  docs/                    1 file   generated catalogs and long-form notes
+  harness/                 3 files  provenance, metrics contract, invariant enforcement
+  journal/                 1 file   dated research log -- what was tried, what it showed
+  literature/              1 file   the paper corpus and its hyperlinked index
+  results/                 1 file   metrics.json per run (artifacts are NOT committed)
+  scripts/                 3 files  repo gates and generators
+  security/                3 files  zero-dependency secret and identifier scanner
+  skills/                  5 files  provider-agnostic task recipes for agents
+  src/                     4 files
+    emlnca/                  4 files  EML-family primitives, stability instrumentation
+  tests/                   5 files  invariants (hard-fail) -- never research metrics
+  threads/                 1 file   parallel research threads: fork, run, converge
 ```
 
-## Automation policy
+_45 tracked files. Generated by `scripts/gen_docs.py` -- do not edit by hand._
+<!-- END:REPOMAP -->
 
-Three tiers, on different triggers. Time-based ML runs are cargo-culted from web
-CI: re-running identical code on a schedule produces notifications that get
-filtered to a folder nobody opens.
+## Does / does not
 
-| Tier | Trigger | Budget | Blocking |
-|---|---|---|---|
-| **Guard** | push / PR | < 60 s | yes |
-| **Sweep** | manual + weekly | ~20 min | no |
-| **Deep** | manual, local/Colab GPU | hours | no |
+| ✅ Does | ❌ Does not |
+|---|---|
+| Investigate EML advantage in NCA, with falsifiers | Claim EML works |
+| Verify published claims against primary evidence | Reimplement Lenia or NCA |
+| Provide EML primitives + stability instrumentation | Ship a stable library API |
+| Record negative results permanently | Store artifacts in git |
+| Enforce reproducibility (seed · SHA · config hash) | Train on CI (no GPU) |
 
-The weekly run exists to catch **dependency** drift (a numpy release changing a
-reduction order), not code drift.
+Full version, including deliberately deferred items: [docs/SCOPE.md](docs/SCOPE.md).
 
-### Invariants hard-fail; metrics never do
+## Invariants vs metrics
 
-The single most important policy here.
+The most important policy here.
 
-| | Invariants — **BLOCK** | Metrics — **report only** |
+| | **Invariant** — hard fail | **Metric** — report only |
 |---|---|---|
-| Examples | NaN/inf; non-determinism under a fixed seed; gain outside [0.5, 1.5]; a published identity breaking; a security finding | Orbium lifetime; accuracy; parameter count; recovery rate |
-| Rationale | always a bug — no legitimate research reason to break them | *should* move; movement is the finding |
+| **definition** | never legitimately false | should move as research progresses |
+| **examples** | NaN/inf · seed non-determinism · broken identity · gain outside 10⁻³–10³ · security finding | Orbium lifetime · accuracy · param count · recovery rate · actual gain |
+| **lives in** | `tests/`, `configs/frozen/` | `results/*.metrics.json`, `configs/experimental/` |
 
-In software a falling metric is a regression. **In research it is often the
-result.** Hard-failing CI on metric movement teaches you to add
-`continue-on-error: true`, and then the safety net is gone. Metrics are posted
-as a delta table on the PR; a human decides.
+In software a falling number is a regression; **in research it is often the
+finding**. Gate CI on metrics and people add `continue-on-error: true`, which
+destroys the invariant gate too.
+
+Golden-test ambiguity is resolved **structurally**: `configs/frozen/` never
+changes (→ invariant), `configs/experimental/` is where you work (→ metric).
+
+## Test catalog
+
+<!-- BEGIN:TESTCATALOG -->
+| file | tests | covers |
+|---|---:|---|
+| `test_determinism.py` | 7 | Seed determinism: the invariant everything else rests on |
+| `test_hooks_installable.py` | 9 | Tests that the security controls are actually *installable and runnable* |
+| `test_identities.py` | 18 | Tier 1 tests: published identities |
+| `test_invariants.py` | 9 | Tier 2 tests: numerical invariants for iterated maps |
+| `test_security_scan.py` | 18 | Tests for the security scanner |
+| **total** | **61** | all hard-failing invariants |
+<!-- END:TESTCATALOG -->
+
+## Research threads
+
+Threads carry a hypothesis and an explicit **falsifier**. They may fork
+(`parent`) and converge. Abandoned threads keep their verdicts — deleting dead
+threads turns a research log into marketing.
+
+<!-- BEGIN:THREADS -->
+| id | status | hypothesis | parent | verdict |
+|---|---|---|---|---|
+| `t0-foundation` | ● active | EML primitives can be implemented safely enough to iterate thousands of times | - | supported: eml_stable survives 5k steps x 256 starts |
+| `t1-grayscott` | ○ proposed | An EML/SOL forest can recover the uv^2 cross term of Gray-Scott | t0-foundation | _open_ |
+| `t2-lenia-gate` | ○ proposed | Erez's 3-param gate can replace Lenia's Gaussian growth function and sustain Orbium | t0-foundation | _open_ |
+| `t3-nca-forest` | ○ proposed | An EML forest with a linear perception projection matches Growing-NCA at <= 300 params vs ~8000 | t2-lenia-gate | _open_ |
+| `t4-spectral` | ○ proposed | rho(J) from the analytic Jacobian predicts which NCA patterns persist | t3-nca-forest | _open_ |
+| `t5-symbolic-recovery` | ○ proposed | Trained EML weights snap to exact symbolic values, recovering a readable rule | t3-nca-forest | _open_ |
+<!-- END:THREADS -->
+
+Open one: [`skills/add-thread.md`](skills/add-thread.md).
+
+## Corpus
+
+<!-- BEGIN:LITERATURE -->
+| # | date | paper | role |
+|---|---|---|---|
+| 0 | 2026-03 | [All elementary functions from a single operator](https://arxiv.org/abs/2603.21852) | SOURCE. Defines eml(x,y)=exp(x)-ln(y). Reports blind symbolic recovery collapsing to 0/448 at depth 6. |
+| 1 | 2026-04 | [Algebraic structure behind Odrzywolek's EML operator](https://arxiv.org/abs/2604.23893) | Shows EML is one member of a classifiable family; the depth-7 ln tree is structural, not logarithmic. Missed by Semantic Scholar; found via Belaiche's reference list. |
+| 2 | 2026-04 | [Auto-Relational Reasoning](https://arxiv.org/abs/2604.26507) | Weakest link: cites EML in one sentence as justification, implements none of it. No code. |
+| 3 | 2026-05 | [Additive Atomic Forests for Symbolic Function and Antiderivative Discovery](https://arxiv.org/abs/2605.08130) | Adds SOL = sin(u)-cos(v) because trig costs depth ~8 in EML. Strong empirical claims, no code released. |
+| 4 | 2026-05 | [Non-Monotone Response Modules and Cascades from the EML Operator](https://arxiv.org/abs/2605.02972) | MOST DIRECTLY USEFUL. 3-parameter non-monotone gate; ran the fair Hill comparison and reported the tie at depth 2. Ships code. |
+| 5 | 2026-06 | [EML-CD: Causal Mechanism Recovery via EML Symbolic Trees](https://arxiv.org/abs/2606.05942) | Analytic Jacobians as the selling point. Documents that exp clipping is 'load-bearing rather than cosmetic'. |
+| 6 | 2026-06 | [EML Trees Are Universal Approximators](https://arxiv.org/abs/2606.23179) | CRITICAL NEGATIVE RESULT: 0/42 parameters snap to symbolic form. Theorem covers the 6-param generalized atom, not vanilla EML. |
+| 7 | 2026-07 | [EML-AirComp: Layered Over-the-Air Computation from a Single Nomographic Gate](https://arxiv.org/abs/2607.16360) | The clean win. EML is exactly nomographic, so one analog gate type serves every tree node. Sidesteps complex domain via real-admissible trees. |
+| 8 | 2020-02 | [Growing Neural Cellular Automata](https://arxiv.org/abs/None) | TARGET SYSTEM. ~8k-parameter MLP update rule; the thing an EML forest would replace. |
+<!-- END:LITERATURE -->
+
+## Working with an AI assistant
+
+[AGENTS.md](AGENTS.md) is the single source of truth, provider-agnostic.
+`CLAUDE.md`, `.github/copilot-instructions.md` and `.cursor/rules/` are
+pointers only — duplicated instructions drift.
+
+Skills: [verify-claim](skills/verify-claim.md) ·
+[add-thread](skills/add-thread.md) ·
+[run-experiment](skills/run-experiment.md) ·
+[review-critically](skills/review-critically.md) ·
+[journal-entry](skills/journal-entry.md)
+
+## Living documentation
+
+Generated regions are rebuilt from the repository and **gated in CI**:
+
+```bash
+python scripts/gen_docs.py           # rebuild
+python scripts/gen_docs.py --check   # fail if stale
+```
+
+Hand-written docs drift within days, and stale docs actively mislead.
 
 ## Security
 
-This repo is public and developed on a corporate machine. Five layers guard
-against accidental disclosure — commit identity, message, staged content, push
-range, and CI. See [SECURITY.md](SECURITY.md).
-
-Hooks are not transferred by `git clone`. **Run `python scripts/setup_hooks.py`
-after cloning.**
-
-## References
-
-| | |
-|---|---|
-| Odrzywołek 2026 | [2603.21852](https://arxiv.org/abs/2603.21852) — the EML operator |
-| Stachowiak 2026 | [2604.23893](https://arxiv.org/abs/2604.23893) — algebraic structure |
-| Belaiche 2026 | [2605.08130](https://arxiv.org/abs/2605.08130) — SOL, additive forests |
-| Erez 2026 | [2605.02972](https://arxiv.org/abs/2605.02972) — non-monotone gate |
-| Asanuma 2026 | [2606.05942](https://arxiv.org/abs/2606.05942) — causal mechanisms |
-| Germany et al. 2026 | [2606.23179](https://arxiv.org/abs/2606.23179) — universal approximation |
-| Günlü 2026 | [2607.16360](https://arxiv.org/abs/2607.16360) — AirComp gate |
-| Mordvintsev et al. 2020 | [Growing NCA](https://distill.pub/2020/growing-ca/) |
-| Chan 2019 | [Lenia](https://github.com/Chakazul/Lenia) |
+Public repo, corporate machine. Five layers: identity → commit message →
+staged content → pushed range → CI. See [SECURITY.md](SECURITY.md).
 
 ## Licence
 

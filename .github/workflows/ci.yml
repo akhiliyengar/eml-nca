@@ -38,6 +38,22 @@ jobs:
         run: python security/scan.py --mode all
 
   # ---------------------------------------------------------------------
+  # Generated documentation must match the repository. Hand-written docs
+  # drift within days, and stale docs actively mislead.
+  # ---------------------------------------------------------------------
+  docs:
+    name: docs in sync
+    needs: security
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Generated regions must be current
+        run: python scripts/gen_docs.py --check
+
+  # ---------------------------------------------------------------------
   # Guard tier. Invariants only -- these HARD FAIL.
   # Research metrics are reported separately and never block a merge.
   #

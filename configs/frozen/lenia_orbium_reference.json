@@ -1,0 +1,28 @@
+{
+  "$comment": [
+    "FROZEN REFERENCE CONFIG - DO NOT EDIT.",
+    "",
+    "This file resolves the golden-test ambiguity structurally rather than by",
+    "judgement. Assertions run against THIS config are INVARIANTS: only a bug",
+    "can break them, because the inputs never change.",
+    "",
+    "Work in configs/experimental/ instead. The same assertions there are",
+    "METRICS: they report a delta and never block, because they are supposed",
+    "to move.",
+    "",
+    "Editing this file silently converts a regression test into a moving",
+    "target. If the reference genuinely must change, add a NEW frozen config",
+    "with a new name and record why in the CHANGELOG."
+  ],
+  "name": "lenia_orbium_reference",
+  "frozen": true,
+  "seed": 0,
+  "grid": {"size": 128, "dt": 0.1},
+  "kernel": {"type": "gaussian_ring", "radius": 13, "mu": 0.5, "sigma": 0.15},
+  "growth": {"type": "gaussian", "mu": 0.15, "sigma": 0.017},
+  "steps": 1000,
+  "expect": {
+    "pattern_survives": true,
+    "mass_bounds": [0.02, 0.60]
+  }
+}
