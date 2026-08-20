@@ -52,6 +52,8 @@ jobs:
           python-version: "3.11"
       - name: Generated regions must be current
         run: python scripts/gen_docs.py --check
+      - name: Capability contracts are exact code
+        run: python -m pytest tests/test_capability_contracts.py -q
 
   # ---------------------------------------------------------------------
   # Guard tier. Invariants only -- these HARD FAIL.
