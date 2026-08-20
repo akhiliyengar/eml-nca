@@ -82,7 +82,7 @@ Günlü's per-node sensitivity is `e^b`, compounding along the path to the root.
 
 | per-step gain | after 100 steps |
 |---|---|
-| 1.05 | **131×** |
+| 1.05 | **131.5×** |
 | 0.95 | **0.006** |
 
 There is almost no middle ground. Consequences, binding on all experiments:

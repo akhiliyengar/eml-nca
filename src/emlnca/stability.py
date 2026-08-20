@@ -7,7 +7,7 @@ gives the left-input sensitivity of an EML gate as exp(b), and the total
 distortion at the root as the PRODUCT of sensitivities along the path.
 
 Iterate a map with per-step gain g for T steps and the perturbation scales as
-g**T. At g = 1.05 and T = 100 that is a factor of 131. At g = 0.95 it is 0.006.
+g**T. At g = 1.05 and T = 100 that is a factor of 131.5. At g = 0.95 it is 0.0059.
 There is almost no middle ground, which is why gain must be measured from the
 first run rather than inferred after a failure.
 """

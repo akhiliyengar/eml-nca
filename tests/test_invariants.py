@@ -47,7 +47,7 @@ def test_gain_trace_detects_contraction():
 def test_the_feedback_hazard_is_real():
     """Quantifies the microphone-next-to-speaker problem for the record.
 
-    100 steps at gain 1.05 amplifies by ~131x; at 0.95 it decays to ~0.006.
+    100 steps at gain 1.05 amplifies by 131.5x; at 0.95 it decays to 0.0059.
     There is no comfortable middle, which is why gain is instrumented from run
     one rather than diagnosed after a failure.
     """

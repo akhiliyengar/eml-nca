@@ -22,3 +22,6 @@ results/**/*.png
 # literature: regenerable via the fetch-literature capability
 literature/pdf/
 literature/text/
+
+# manim render output - regenerable
+media/

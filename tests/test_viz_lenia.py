@@ -117,7 +117,7 @@ def test_boundary_is_periodic(js):
 
 
 def test_gain_readout_exists(js):
-    """Gain decides survival: 1.05^100 is 131x, 0.95^100 is 0.006. The viewer
+    """Gain decides survival: 1.05^100 is 131.5x, 0.95^100 is 0.0059. The viewer
     must show it, or judging 'does Orbium survive' becomes guesswork."""
     assert "rgain" in js and "massHist" in js
     assert "DIED" in js and "SATURATED" in js

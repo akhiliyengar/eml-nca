@@ -11,6 +11,7 @@ dependencies = ["numpy>=1.26"]
 
 [project.optional-dependencies]
 dev = ["pytest>=8", "pytest-cov>=5", "ruff==0.16.3"]
+viz = ["manim>=0.21"]   # render only; content tests need nothing
 
 [tool.setuptools.packages.find]
 where = ["src"]
