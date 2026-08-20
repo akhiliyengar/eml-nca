@@ -1,0 +1,58 @@
+{
+  "invariants": {
+    "reproducible": "WARN"
+  },
+  "metrics": {
+    "control.best_params": [
+      0.13,
+      0.02
+    ],
+    "control.best_survivors": 19,
+    "control.n_configs": 9,
+    "control.total_survivors": 71,
+    "erez.best_params": [
+      0.25,
+      0.15,
+      0.005,
+      1.0
+    ],
+    "erez.best_survivors": 0,
+    "erez.n_configs": 120,
+    "erez.total_survivors": 0,
+    "repair.best_params": [
+      0.25,
+      1.0,
+      0.1
+    ],
+    "repair.best_survivors": 20,
+    "repair.total_survivors": 52,
+    "seed_grid_size": 20,
+    "verdict.basin_ratio": 0.0,
+    "verdict.supported": false
+  },
+  "notes": [
+    "working tree was dirty: the exact code is not committed anywhere, so no one else can reproduce this"
+  ],
+  "provenance": {
+    "config_path": "inline",
+    "config_sha256": "d0b2bd3cf72e5ce5861bfdf35146d306ecb5dcbb49cae0a9eed52edc582fbbce",
+    "duration_s": null,
+    "env": {
+      "machine": "AMD64",
+      "numpy": "2.4.6",
+      "platform": "Windows-10-10.0.26200-SP0",
+      "python": "3.11.9"
+    },
+    "git": {
+      "branch": "main",
+      "dirty": true,
+      "sha": "092c4edf47c500684cda580be5188ff6fc21ae75",
+      "short": "092c4edf4"
+    },
+    "run_id": "2228471d42bd",
+    "schema": 1,
+    "seed": 0,
+    "started_utc": "2026-08-20T20:06:41Z",
+    "thread": "t2-lenia-gate"
+  }
+}

@@ -27,7 +27,10 @@
       "owner": "akhiliyengar",
       "opened": "2026-08-20",
       "verdict": "supported: eml_stable survives 5k steps x 256 starts",
-      "artifacts": ["src/emlnca/ops.py", "tests/test_invariants.py"]
+      "artifacts": [
+        "src/emlnca/ops.py",
+        "tests/test_invariants.py"
+      ]
     },
     {
       "id": "t1-grayscott",
@@ -43,13 +46,13 @@
     },
     {
       "id": "t2-lenia-gate",
-      "status": "proposed",
+      "status": "abandoned",
       "parent": "t0-foundation",
       "hypothesis": "Erez's 3-param gate can replace Lenia's Gaussian growth function and sustain Orbium",
-      "falsifier": "Orbium dies before 1000 steps for all (a,b,c) in the swept range",
-      "owner": null,
-      "opened": null,
-      "verdict": null,
+      "falsifier": "zero survivors across the (a,b,c,scale) sweep WHILE the Gaussian control survives on the same seeds",
+      "owner": "akhiliyengar",
+      "opened": "2026-08-20",
+      "verdict": "FALSIFIED 2026-08-20 as published: 0/2400 vs control 71/180 on identical seeds. Mechanism: the gate is non-negative across the whole positive domain (+0.0036 at u=0.001 where the Gaussian gives -1.0), so empty space cannot decay and the grid fogs. Cause is Erez's own centering term -c^a. Repair: subtract a constant -> 20/20, but that is 4 shape params vs the Gaussian's 2, and Erez's parsimony claim was measured against monotone Hill functions, not against an already-non-monotone bump.",
       "notes": "Highest prior probability. Lenia's growth function is univariate and non-monotone, which is exactly the shape Erez's gate produces natively in one block.",
       "artifacts": []
     },
@@ -88,6 +91,21 @@
       "verdict": null,
       "notes": "PRIOR IS LOW. Germany et al. report 0/42 at depth 3 on simpler targets. Registered anyway because it is EML's headline claim and a negative result here is worth publishing.",
       "artifacts": []
+    },
+    {
+      "id": "t2b-erez-offset",
+      "status": "proposed",
+      "parent": "t2-lenia-gate",
+      "hypothesis": "The offset gate G(x)=(c+x)^a-b x-c^a-theta sustains Lenia robustly across kernel radius and dt",
+      "falsifier": "survivor basin collapses to zero outside the single tested (radius=13, dt=0.1) setting",
+      "owner": null,
+      "opened": null,
+      "verdict": null,
+      "notes": "Born from the Rung 2 mechanism. The repair works at 20/20 but was only tested at one kernel radius and one dt. Also open: does theta have an interpretation, or is it a fudge factor? A fudge factor that works is still worth reporting, but must be labelled as one.",
+      "artifacts": [
+        "src/emlnca/lenia.py",
+        "experiments/rung2_lenia/run.py"
+      ]
     }
   ]
 }

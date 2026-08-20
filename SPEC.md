@@ -135,10 +135,11 @@ silently implying rigour.
 |---|---|---|---|---|
 | `t0-foundation` | ● active | EML primitives can be implemented safely enough to iterate thousands of times | - | supported: eml_stable survives 5k steps x 256 starts |
 | `t1-grayscott` | ✗ abandoned | An EML/SOL forest can recover the uv^2 cross term of Gray-Scott | t0-foundation | FALSIFIED 2026-08-20: EML/SOL approximates (relMSE 1.1e-2) but does not recover; 2.27e29x worse than exact basis. Given a mixed basis the search selects the polynomial u*v^2. Confirms Asanuma on cross-variable interaction. |
-| `t2-lenia-gate` | ○ proposed | Erez's 3-param gate can replace Lenia's Gaussian growth function and sustain Orbium | t0-foundation | _open_ |
+| `t2-lenia-gate` | ✗ abandoned | Erez's 3-param gate can replace Lenia's Gaussian growth function and sustain Orbium | t0-foundation | FALSIFIED 2026-08-20 as published: 0/2400 vs control 71/180 on identical seeds. Mechanism: the gate is non-negative across the whole positive domain (+0.0036 at u=0.001 where the Gaussian gives -1.0), so empty space cannot decay and the grid fogs. Cause is Erez's own centering term -c^a. Repair: subtract a constant -> 20/20, but that is 4 shape params vs the Gaussian's 2, and Erez's parsimony claim was measured against monotone Hill functions, not against an already-non-monotone bump. |
 | `t3-nca-forest` | ○ proposed | An EML forest with a linear perception projection matches Growing-NCA at <= 300 params vs ~8000 | t2-lenia-gate | _open_ |
 | `t4-spectral` | ○ proposed | rho(J) from the analytic Jacobian predicts which NCA patterns persist | t3-nca-forest | _open_ |
 | `t5-symbolic-recovery` | ○ proposed | Trained EML weights snap to exact symbolic values, recovering a readable rule | t3-nca-forest | _open_ |
+| `t2b-erez-offset` | ○ proposed | The offset gate G(x)=(c+x)^a-b x-c^a-theta sustains Lenia robustly across kernel radius and dt | t2-lenia-gate | _open_ |
 <!-- END:THREADS -->
 
 ## Corpus

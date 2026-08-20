@@ -53,10 +53,21 @@
     <button id="bGauss" class="on">Gaussian (control)</button>
     <button id="bErez">Erez EML gate</button>
     <div class="note" id="gdesc"></div>
+    <div class="note" style="margin-top:8px;border-top:1px solid var(--line);padding-top:6px">
+      <b>Why two buttons?</b> The left one is the rule Lenia already uses. You
+      need it to compare against &mdash; &ldquo;the new rule kept it alive&rdquo;
+      means nothing on its own. Alive compared to what?
+    </div>
   </fieldset>
 
   <fieldset id="fsGauss">
     <legend>Gaussian G(u)</legend>
+    <div class="note" style="margin-bottom:6px">
+      <b>In plain English:</b> a cell is happy only with <i>just the right</i>
+      amount of neighbour activity. Like porridge temperature &mdash; too little
+      or too much and it dims. <b>mu</b> is the right amount, <b>sigma</b> is how
+      fussy it is.
+    </div>
     <label>mu <span class="val" id="vmu">0.150</span></label>
     <input type="range" id="mu" min="0.02" max="0.40" step="0.001" value="0.15">
     <label>sigma <span class="val" id="vsig">0.017</span></label>
@@ -65,6 +76,13 @@
 
   <fieldset id="fsErez" style="display:none">
     <legend>Erez gate (c+x)^a − b·x − c^a</legend>
+    <div class="note" style="margin-bottom:6px">
+      <b>In plain English:</b> two forces pulling against each other.
+      <b>a</b> grows with neighbours but gets tired as it rises. <b>b</b> is a
+      steady penalty that never tires. Early on growth wins; later the penalty
+      overtakes it. So the curve goes up, turns over, comes down.
+      <b>c</b> pins the curve so empty space stays empty.
+    </div>
     <label>a — exponent <span class="val" id="va">0.500</span></label>
     <input type="range" id="a" min="0.05" max="0.95" step="0.01" value="0.5">
     <label>b — suppression <span class="val" id="vb">0.300</span></label>
@@ -82,6 +100,13 @@
 
   <fieldset>
     <legend>kernel &amp; time</legend>
+    <div class="note" style="margin-bottom:8px">
+      <b>radius</b> = how far a cell looks. It looks at a <i>ring</i> of
+      neighbours, not a blob &mdash; caring about <i>distance</i> is what makes
+      shapes crawl instead of sit still.<br>
+      <b>dt</b> = size of one time step. Too big and the simulation jumps past
+      reality, like a flipbook missing pages.
+    </div>
     <label>radius <span class="val" id="vR">13</span></label>
     <input type="range" id="R" min="6" max="24" step="1" value="13">
     <label>dt <span class="val" id="vdt">0.10</span></label>
@@ -97,9 +122,7 @@
       <tr><td class="k">verdict</td><td class="v" id="rverdict">—</td></tr>
     </table>
     <div class="note">
-      Gain is mass(t)/mass(t−1), smoothed. NCA and Lenia both apply their rule
-      thousands of times: 1.05^100 = 131.5×, 0.95^100 = 0.0059. There is almost no
-      middle ground, so gain is the number that decides survival.
+      <b>Gain = how much bigger it got in one step.</b> Sounds boring; it is not. The rule runs thousands of times and small things multiply: 1.05 per step becomes <b>131.5&times;</b> after 100 steps, 0.95 becomes <b>0.0059</b>. Picture a microphone next to its own speaker &mdash; ear-splitting squeal or dead silence, almost nothing in between.<br><br><b>verdict</b> also checks the world is not <i>fog</i>. A screen of dim grey weighs the same as a bright creature on black, so we require most of the grid stays empty. That check changed a result: a run scoring 20/20 turned out to be fog, and the true score was 0.
     </div>
   </fieldset>
 
@@ -110,12 +133,12 @@
     <button id="bNoise">noise</button>
     <button id="bPause">pause</button>
     <div class="note">
-      Orbium is Lenia's canonical glider. Rung 2 asks whether the EML gate can
-      sustain it for 1000 steps.
+      Where the creature starts. <b>The set of starting shapes that survive is tiny</b> &mdash; radius 8 at amplitude 0.50 dies by step 22, at 0.60 it lives past 400, and radius 10 dies for everything tried. That is why the experiment sweeps many seeds: otherwise &ldquo;the new rule killed it&rdquo; is indistinguishable from &ldquo;that seed was doomed anyway&rdquo;.
     </div>
   </fieldset>
 
   <div class="note">
+    <a href="https://github.com/akhiliyengar/eml-nca/blob/main/docs/WHY.md"><b>Why each control exists &rarr;</b></a><br>
     <a href="https://github.com/akhiliyengar/eml-nca">akhiliyengar/eml-nca</a> ·
     Lenia by <a href="https://github.com/Chakazul/Lenia">Bert Chan</a> (MIT) ·
     gate from <a href="https://arxiv.org/abs/2605.02972">arXiv:2605.02972</a>
