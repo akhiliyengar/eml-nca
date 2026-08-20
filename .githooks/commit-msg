@@ -1,0 +1,48 @@
+#!/bin/sh
+# Commit-message guard.
+#
+# A credential or internal URL pasted into a commit message is exactly as
+# public as one in a file, and considerably harder to notice later because it
+# never shows up in a file diff.
+
+set -e
+
+MSG_FILE="$1"
+REPO_ROOT=$(git rev-parse --show-toplevel)
+
+if [ -x "$REPO_ROOT/.venv/Scripts/python.exe" ]; then
+    PY="$REPO_ROOT/.venv/Scripts/python.exe"
+elif [ -x "$REPO_ROOT/.venv/bin/python" ]; then
+    PY="$REPO_ROOT/.venv/bin/python"
+elif command -v python3 >/dev/null 2>&1; then
+    PY=python3
+else
+    PY=python
+fi
+
+"$PY" - "$MSG_FILE" <<'PYEOF'
+import pathlib
+import sys
+
+root = pathlib.Path(__file__).resolve()
+repo = pathlib.Path.cwd()
+sys.path.insert(0, str(repo))
+from security.scan import BLOCK, scan_line
+
+msg_path = pathlib.Path(sys.argv[1])
+text = msg_path.read_text(encoding="utf-8", errors="replace")
+
+findings = []
+for i, line in enumerate(text.splitlines(), start=1):
+    if line.lstrip().startswith("#"):
+        continue          # git's own comment lines
+    findings.extend(scan_line("<commit message>", i, line))
+
+blocking = [f for f in findings if f.rule.severity == BLOCK]
+if blocking:
+    print("\n  COMMIT MESSAGE REFUSED -- sensitive content:\n")
+    for f in blocking:
+        print(f.render())
+    print("\n  Edit the message and retry.\n")
+    sys.exit(1)
+PYEOF

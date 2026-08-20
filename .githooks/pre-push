@@ -1,0 +1,66 @@
+#!/bin/sh
+# Pre-push guard: the last barrier before anything becomes public.
+#
+# Deliberately broader than pre-commit. It re-scans every commit being pushed,
+# because commits can arrive by paths that never ran pre-commit: merges,
+# cherry-picks, rebases, or a colleague's --no-verify.
+
+set -e
+
+REPO_ROOT=$(git rev-parse --show-toplevel)
+
+if [ -x "$REPO_ROOT/.venv/Scripts/python.exe" ]; then
+    PY="$REPO_ROOT/.venv/Scripts/python.exe"
+elif [ -x "$REPO_ROOT/.venv/bin/python" ]; then
+    PY="$REPO_ROOT/.venv/bin/python"
+elif command -v python3 >/dev/null 2>&1; then
+    PY=python3
+else
+    PY=python
+fi
+
+ZERO=0000000000000000000000000000000000000000
+STATUS=0
+
+while read -r _local_ref local_sha _remote_ref remote_sha; do
+    [ "$local_sha" = "$ZERO" ] && continue    # branch deletion
+
+    if [ "$remote_sha" = "$ZERO" ]; then
+        # New branch: scan everything reachable that the remote lacks.
+        RANGE=$(git rev-list --max-count=1 --reverse "$local_sha")
+        echo "pre-push: new branch, scanning full working tree"
+        "$PY" "$REPO_ROOT/security/scan.py" --mode tree || STATUS=1
+    else
+        echo "pre-push: scanning $remote_sha..$local_sha"
+        "$PY" "$REPO_ROOT/security/scan.py" --mode range \
+              --range "$remote_sha..$local_sha" || STATUS=1
+    fi
+done
+
+# Identity across ALL history. Content can be fixed by a later commit;
+# author/committer metadata cannot.
+echo "pre-push: auditing commit identity across history"
+"$PY" - <<'PYEOF' || STATUS=1
+import subprocess, sys, pathlib
+sys.path.insert(0, str(pathlib.Path.cwd() / "security"))
+root = subprocess.run(["git", "rev-parse", "--show-toplevel"],
+                      capture_output=True, text=True).stdout.strip()
+sys.path.insert(0, root)
+from security.scan import scan_history
+f = scan_history()
+if f:
+    print("\n  BLOCKING: corporate identity found in commit history:\n")
+    for x in f:
+        print(x.render())
+    print("\n  Rewrite with:  git filter-branch / git rebase -i, or for a")
+    print("  single commit:  git commit --amend --reset-author\n")
+    sys.exit(1)
+print("  identity clean")
+PYEOF
+
+if [ "$STATUS" -ne 0 ]; then
+    echo ""
+    echo "PUSH REFUSED by security scan. This repository is PUBLIC."
+    echo ""
+    exit 1
+fi

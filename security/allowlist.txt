@@ -1,0 +1,16 @@
+# Paths excluded from the security scan.
+# One path per line, repo-relative, forward slashes. '#' starts a comment.
+#
+# Use SPARINGLY. Prefer the inline pragma   # allow-secret: <reason>   so the
+# exemption sits next to the code it applies to and shows up in review.
+#
+# ---------------------------------------------------------------------------
+# The scanner's own test corpus. This file exists to prove the rules fire, so
+# it necessarily contains one synthetic example per rule: fake AWS keys, fake
+# tokens, example.com-style corporate addresses, placeholder paths.
+#
+# Every value in it is SYNTHETIC and must stay that way. Standard practice --
+# gitleaks, trufflehog and detect-secrets all exempt their own corpora for the
+# same reason. Reviewers: treat any change to this file as security-relevant.
+# ---------------------------------------------------------------------------
+tests/test_security_scan.py

@@ -1,0 +1,38 @@
+Add zero-dependency security scanner, git hooks, CI, and docs
+
+Repo is going public and is developed on a corporate machine, so the controls
+target accidental disclosure rather than a targeted attacker.
+
+security/scan.py  stdlib-only scanner: credentials, corporate identifiers,
+                  internal URLs, local-path and tenant leakage. Scans added
+                  lines only; redacts findings before printing, since CI logs
+                  on a public repo are themselves public.
+.githooks/        pre-commit (identity guard + staged scan), commit-msg,
+                  pre-push (pushed range + full-history identity audit).
+                  Version-controlled via core.hooksPath; .git/hooks neither
+                  clones nor gets reviewed.
+.github/workflows CI gates on the scanner, then a 2-OS x 2-python guard
+                  matrix. A dedicated job proves the hooks actually block a
+                  synthetic secret, so the control cannot silently rot.
+
+Two encoding bugs found by dogfooding the scanner on its own commit:
+
+  read   subprocess(text=True) decodes with the LOCALE codec (cp1252 on
+         Windows). A non-ASCII byte in a diff raised UnicodeDecodeError inside
+         subprocess's reader thread; the exception was swallowed and .stdout
+         returned None. Had it returned an empty string the scanner would have
+         reported CLEAN on content it never read - a silent false negative,
+         the one failure mode that is unrecoverable for this tool.
+  write  same root cause, opposite direction: printing a redacted line with a
+         non-ASCII character killed the run AFTER a finding, losing the report
+         exactly when it mattered.
+
+Both now force UTF-8 and fail loudly rather than silently.
+
+The CI OS matrix is load-bearing: the branch-cut test pins a floating-point
+sign roughly 8 ULPs from flipping, which would silently invert every constant
+derived from ln(-1).
+
+45 new tests. All fixtures synthetic.
+
+Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>

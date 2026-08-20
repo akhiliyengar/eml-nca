@@ -1,0 +1,118 @@
+name: ci
+
+# Trigger policy (see README "Automation" for the rationale):
+#   push / PR  -> Guard tier only. Fast, blocking, deterministic.
+#   weekly     -> same seeds re-run to catch DEPENDENCY drift, not code drift.
+#   manual     -> heavier sweeps.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "17 6 * * 1"   # Mondays 06:17 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ---------------------------------------------------------------------
+  # Runs FIRST and gates everything else. A leak must never reach a log,
+  # and CI logs on a public repository are themselves public.
+  # ---------------------------------------------------------------------
+  security:
+    name: security scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0        # full history: identity audit needs every commit
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Scan tree and commit identity
+        run: python security/scan.py --mode all
+
+  # ---------------------------------------------------------------------
+  # Guard tier. Invariants only -- these HARD FAIL.
+  # Research metrics are reported separately and never block a merge.
+  #
+  # The OS matrix is not ceremony: test_ln_negative_is_knife_edge_on_the_
+  # branch_cut pins a floating-point sign that sits ~8 ULPs from flipping.
+  # If libm differs across platforms we want a red test, not silent
+  # sign errors in every constant derived from ln(-1).
+  # ---------------------------------------------------------------------
+  guard:
+    name: guard (${{ matrix.os }} / py${{ matrix.python }})
+    needs: security
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ["3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install
+        run: |
+          python -m pip install --quiet --upgrade pip
+          python -m pip install --quiet -e ".[dev]"
+      - name: Lint
+        run: python -m ruff check src tests security scripts
+      - name: Tests
+        run: python -m pytest -q --junitxml=junit.xml
+      - name: Upload test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: junit-${{ matrix.os }}-py${{ matrix.python }}
+          path: junit.xml
+          retention-days: 14
+
+  # ---------------------------------------------------------------------
+  # Hooks are only useful if they actually fire. This proves the guard
+  # blocks a synthetic secret, so the control cannot silently rot.
+  # ---------------------------------------------------------------------
+  hooks:
+    name: hook effectiveness
+    needs: security
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Hooks must reject a synthetic secret
+        run: |
+          set -e
+          git config user.name  "ci"
+          git config user.email "ci@users.noreply.github.com"
+          git config core.hooksPath .githooks
+          printf 'K = "AKIAIOSFODNN7EXAMPLE"\n' > __leak_probe.py  # allow-secret: synthetic probe, AWS docs sample
+          git add __leak_probe.py
+          if git commit -m "must be refused" 2>/dev/null; then
+            echo "::error::pre-commit hook FAILED to block a synthetic secret"
+            exit 1
+          fi
+          echo "pre-commit correctly refused the commit"
+          git reset -q HEAD __leak_probe.py && rm -f __leak_probe.py
+      - name: Hooks must reject a corporate identity
+        run: |
+          set -e
+          git config core.hooksPath .githooks
+          git config user.email "someone@microsoft.com"  # allow-secret: synthetic probe for the identity guard
+          printf 'x = 1\n' > __ident_probe.py
+          git add __ident_probe.py
+          if git commit -m "must be refused" 2>/dev/null; then
+            echo "::error::pre-commit hook FAILED to block a corporate identity"
+            exit 1
+          fi
+          echo "pre-commit correctly refused the identity"
+          git reset -q HEAD __ident_probe.py && rm -f __ident_probe.py

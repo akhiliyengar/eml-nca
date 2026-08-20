@@ -1,0 +1,55 @@
+#!/bin/sh
+# Pre-commit guard. Version-controlled via core.hooksPath (unlike .git/hooks,
+# which is local-only and never clones).
+#
+# Two independent checks:
+#   1. commit identity is not a corporate address
+#   2. staged content contains no credentials / corporate identifiers
+#
+# Enable with:  git config core.hooksPath .githooks
+
+set -e
+
+REPO_ROOT=$(git rev-parse --show-toplevel)
+
+# Prefer the project venv so behaviour matches CI; fall back to system python.
+if [ -x "$REPO_ROOT/.venv/Scripts/python.exe" ]; then
+    PY="$REPO_ROOT/.venv/Scripts/python.exe"
+elif [ -x "$REPO_ROOT/.venv/bin/python" ]; then
+    PY="$REPO_ROOT/.venv/bin/python"
+elif command -v python3 >/dev/null 2>&1; then
+    PY=python3
+else
+    PY=python
+fi
+
+# --- 1. identity guard --------------------------------------------------
+# A corporate email in commit metadata cannot be scrubbed after the fact
+# without rewriting history, and on a public repo it is permanently exposed.
+EMAIL=$(git config user.email || true)
+case "$EMAIL" in
+    *@microsoft.com|*@*.microsoft.com)
+        echo ""
+        echo "======================================================================"
+        echo " COMMIT REFUSED: corporate identity"
+        echo "======================================================================"
+        echo "  git user.email is: $EMAIL"
+        echo ""
+        echo "  This repository is PUBLIC. A corporate address in commit metadata"
+        echo "  is permanent and scraped within hours."
+        echo ""
+        echo "  Fix (repo-local, does not affect your other repos):"
+        echo "    git config user.email '<id>+<user>@users.noreply.github.com'"
+        echo "    git config user.name  '<user>'"
+        echo "======================================================================"
+        echo ""
+        exit 1
+        ;;
+    "")
+        echo "pre-commit: git user.email is unset; refusing to guess." >&2
+        exit 1
+        ;;
+esac
+
+# --- 2. content scan ----------------------------------------------------
+"$PY" "$REPO_ROOT/security/scan.py" --mode staged
